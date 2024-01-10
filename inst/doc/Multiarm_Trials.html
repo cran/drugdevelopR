@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Multiarm - methods for multi-arm programs</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Multiarm - methods for multi-arm
+programs</h1>
+
+
+
+<p>Suppose we are planning a drug development program testing the
+superiority of an experimental treatment over a control treatment. Our
+drug development program consists of an exploratory phase II trial which
+is, in case of promising results, followed by a confirmatory phase III
+trial.</p>
+<p>The drugdevelopR package enables us to optimally plan such programs
+using a utility-maximizing approach. To get a brief introduction, we
+presented a very basic example on how the package works in <a href="https://sterniii3.github.io/drugdevelopR/articles/Introduction-to-drugdevelopR.html">Introduction
+to planning phase II and phase III trials with drugdevelopR</a>. In the
+basic setting, only one phase II and one phase III trial were conducted.
+Contrary to this, we now investigate what happens when multi-arm trials
+are conducted, where several different treatments or several doses of
+the same treatment are tested at the same time. The drugdevelopR package
+enables multi-arm program with two treatment arms and one control
+arm.</p>
+<div id="the-example-setting" class="section level1">
+<h1>The example setting</h1>
+<p>Suppose we are developing a new tumor treatment, <em>exper</em>. The
+patient variable that we want to investigate is how long the patient
+survives without further progression of the tumor (progression-free
+survival). This is a time-to-event outcome variable. We want to test two
+different doses of, <em>exper1</em> and <em>exper2</em>. Therefore, we
+will use the function <code>optimal_multiarm</code>, which calculates
+optimal sample sizes and threshold decisions values for time-to-event
+outcomes when multi-arm trials are conducted.</p>
+<p>Within our drug development program, we will compare our two
+experimental treatments <em>exper1</em> and <em>exper2</em> to the
+control treatment <em>contro</em>. The treatment effect measure is given
+by <span class="math inline">\(\theta = −\log(HR)\)</span>, where the
+hazard ratio <span class="math inline">\(HR\)</span> is the ratio of
+hazards of each treatment and the control.</p>
+</div>
+<div id="applying-the-package-to-the-example" class="section level1">
+<h1>Applying the package to the example</h1>
+<p>After installing the package according to the <a href="https://sterniii3.github.io/drugdevelopR/#Installation">installation
+instructions</a>, we can load it using the following code:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(drugdevelopR)</span></code></pre></div>
+<div id="defining-all-necessary-parameters" class="section level2">
+<h2>Defining all necessary parameters</h2>
+<p>As, the parameters in the multi-arm setting differ slightly from the
+other cases (<a href="https://sterniii3.github.io/drugdevelopR/articles/Bias_adjustment.html">bias
+adjustment</a> and <a href="https://sterniii3.github.io/drugdevelopR/articles/Multitrial.html">multitrial</a>),
+we will explain them in more detail. Contrary to the basic setting, the
+treatment effect are always assumed to be fixed, so the option to use
+prior distributions is not available. Nevertheless, some options to
+adapt the program to your specific needs are also available in this
+setting (see <a href="https://sterniii3.github.io/drugdevelopR/articles/More_Parameters.html">More
+parameters</a>), however, skipping phase II and choosing different
+treatment effects in phase II and III are not possible.</p>
+<p>The following parameters are different to the basic setting, even if
+the names are the same.</p>
+<ul>
+<li><code>hr1</code> is our hazard ratio for the first dose
+<em>exper1</em>. As already explained above, we assume that our
+experimental treatment <em>exper1</em> leads to unfavorable events
+occurring only 75% of times compared to the control treatment
+<em>contro</em>. Therefore, we set <code>hr1 = 0.75</code>. Analogously,
+<code>hr2</code> is the hazard ratio for our second dose
+<em>exper2</em>. For our example, we set <code>hr2 = 0.8</code>.</li>
+<li><code>ec</code> is the control arm event rate for phase II and III,
+how often the unfavorable event occurs in the control group. We assume
+that 60% of patients in the group <em>contro</em> have an unfavorable
+event, thus, we set <code>ec = 0.6</code>.</li>
+<li><code>n2min</code> and <code>n2max</code> specify the minimal and
+maximal number of participants for the phase II trial. The package will
+search for the optimal sample size within this region. For now, we want
+the program to search for the optimal sample size in the interval
+between 20 and 400 participants. In addition, we will tell the program
+to search this region in steps of ten participants at a time by setting
+<code>stepn2 = 10</code>. This is different to <code>optimal_tte</code>,
+where the region of events (and not the sample size region) is
+searched.</li>
+</ul>
+<p>One parameter that is not in the basic setting is the following
+parameter:</p>
+<ul>
+<li>The parameter <code>strategy</code> allows the user to choose
+between three strategies. One can select <code>strategy = 1</code> in
+which only the best promising candidate of the two doses proceeds to
+phase III, <code>strategy = 2</code> in which all promising candidates
+proceed to phase III or <code>strategy = 3</code>, in which both
+strategies are explored. For our example we want to explore both
+settings, so we use <code>strategy = 3</code>.</li>
+</ul>
+<p>The other parameters are identical to the basic setting. Let’s plug
+them into the function:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">optimal_multiarm</span>(<span class="at">hr1 =</span> <span class="fl">0.75</span>, <span class="at">hr2 =</span> <span class="fl">0.80</span>, <span class="at">ec =</span> <span class="fl">0.6</span>, <span class="co"># define assumed true HRs and control arm event rate</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>   <span class="at">n2min =</span> <span class="dv">100</span>, <span class="at">n2max =</span> <span class="dv">200</span>, <span class="at">stepn2 =</span> <span class="dv">10</span>,                 <span class="co"># define optimization set for n2</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>   <span class="at">hrgomin =</span> <span class="fl">0.76</span>, <span class="at">hrgomax =</span> <span class="fl">0.9</span>, <span class="at">stephrgo =</span> <span class="fl">0.02</span>,        <span class="co"># define optimization set for HRgo</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>   <span class="at">alpha =</span> <span class="fl">0.025</span>, <span class="at">beta =</span> <span class="fl">0.1</span>,                             <span class="co"># drug development planning parameters</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>   <span class="at">c2 =</span> <span class="fl">0.75</span>, <span class="at">c3 =</span> <span class="dv">1</span>, <span class="at">c02 =</span> <span class="dv">100</span>, <span class="at">c03 =</span> <span class="dv">150</span>,               <span class="co"># define fixed and variable costs for phase II and III</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>   <span class="at">b1 =</span> <span class="dv">1000</span>, <span class="at">b2 =</span> <span class="dv">2000</span>, <span class="at">b3 =</span> <span class="dv">3000</span>,                       <span class="co"># gains for each effect size category</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>   <span class="at">strategy =</span> <span class="dv">3</span>,                                          </span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>   <span class="at">num_cl =</span> <span class="dv">3</span>)</span></code></pre></div>
+</div>
+<div id="interpreting-the-output" class="section level2">
+<h2>Interpreting the output</h2>
+<p>After setting all these input parameters and running the function,
+let’s take a look at the output of the program.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>res</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; Optimization result where only the most promising candidate continues:</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt;  Utility: 66.88</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt;  Sample size:</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt;    phase II: 140, phase III: 393, total: 533</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt;  Probability to go to phase III: 0.75</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt;  Total cost:</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;    phase II: 205, phase III: 505, cost constraint: Inf</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;  Fixed cost:</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;    phase II: 100, phase III: 150</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;  Variable cost per patient:</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt;    phase II: 0.75, phase III: 1</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt;  Effect size categories (expected gains):</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt;   small: 1 (1000), medium: 0.95 (2000), large: 0.85 (3000)</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt;  Success probability: 0.38</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;  Success probability for a trial with:</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt;    two arms in phase III: 0.38, three arms in phase III: 0</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt;  Significance level: 0.025</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt;  Targeted power: 0.9</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt;  Decision rule threshold: 0.82 [HRgo] </span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt;  Assumed true effects [HR]: </span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt;    treatment 1: 0.75,  treatment 2: 0.8</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt;  Control arm event rate: 0.6</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt; Optimization result where all promising candidates continue:</span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt;  Utility: 56.6</span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt;  Sample size:</span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt;    phase II: 100, phase III: 481, total: 581</span></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt;  Probability to go to phase III: 0.68</span></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt;  Total cost:</span></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt;    phase II: 175, phase III: 583, cost constraint: Inf</span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt;  Fixed cost:</span></span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt;    phase II: 100, phase III: 150</span></span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt;  Variable cost per patient:</span></span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt;    phase II: 0.75, phase III: 1</span></span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt;  Effect size categories (expected gains):</span></span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt;   small: 1 (1000), medium: 0.95 (2000), large: 0.85 (3000)</span></span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt;  Success probability: 0.4</span></span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt;  Success probability for a trial with:</span></span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt;    two arms in phase III: 0.18, three arms in phase III: 0.22</span></span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt;  Significance level: 0.025</span></span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="co">#&gt;  Targeted power: 0.9</span></span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="co">#&gt;  Decision rule threshold: 0.78 [HRgo] </span></span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a><span class="co">#&gt;  Assumed true effects [HR]: </span></span>
+<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="co">#&gt;    treatment 1: 0.75,  treatment 2: 0.8</span></span>
+<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a><span class="co">#&gt;  Control arm event rate: 0.6</span></span></code></pre></div>
+<p>The program returns a data frame, where the output for all
+implemented strategies is listed. For strategy 1 (only the best
+promising proceeds to phase III) we get:</p>
+<ul>
+<li><code>res[1,]$n2</code> is the optimal number of participants for
+phase II and <code>res$n3</code> the resulting number of events for
+phase III. We see that the optimal scenario requires 140 participants in
+phase II and 393 participants in phase III.</li>
+<li><code>res[1,]$HRgo</code> is the optimal threshold value for the
+go/no-go decision rule. We see that we need a hazard ratio of less than
+0.82 in phase II in order to proceed to phase III.</li>
+<li><code>res[1,]$u</code> is the expected utility of the program for
+the optimal sample size and threshold value. In our case it amounts to
+66.88, i.e. we have an expected utility of 6 688 000$.</li>
+</ul>
+<p>The results for strategy 2 (all promising proceed to phase III)
+are:</p>
+<ul>
+<li><code>res[2,]$n2</code> is the optimal number of participants for
+phase II and <code>res$n3</code> the resulting number of events for
+phase III. We see that the optimal scenario requires 100 participants in
+phase II and 481 participants in phase III.</li>
+<li><code>res[2,]$HRgo</code> is the optimal threshold value for the
+go/no-go decision rule. We see that we need a hazard ratio of less than
+0.78 in phase II in order to proceed to phase III.</li>
+<li><code>res[2,]$u</code> is the expected utility of the program for
+the optimal sample size and threshold value. In our case it amounts to
+56.6, i.e. we have an expected utility of 5 660 000$.</li>
+</ul>
+<p>Furthermore, consider the return values <code>sProg</code>,
+<code>sProg2</code> and <code>sProg3</code>. Contrary to the basic
+setting, <code>sProg2</code> is the probability of a successful program
+with only one treatment in phase III (i.e. two arms) and
+<code>sProg3</code> is the probability of a successful program with two
+treatments in phase III (i.e. three arms). Hence, for strategy 1 (only
+the most promising treatment in phase II proceeds to phase III)
+<code>sProg = sProg2 = 0.38</code>. With strategy 2 (all promising
+treatments proceed to phase III), the success probability
+<code>sProg</code> is the sum of the probability that both treatments go
+to phase III <code>sProg3 = 0.22</code> and the probability that only
+one treatment proceeds to phase III <code>sProg2 = 0.18</code>.</p>
+</div>
+</div>
+<div id="where-to-go-from-here" class="section level1">
+<h1>Where to go from here</h1>
+<p>In this article, we presented an example where multi-arm trials are
+conducted. Note that this example is not restricted to time-to-event
+endpoints but can also be applied to binary and normally distributed
+endpoints by using the functions <code>optimal_multiarm_binary</code>
+and <code>optimal_multiarm_normal</code>.</p>
+<p>For more information on how to use the package, see:</p>
+<ul>
+<li><a href="https://sterniii3.github.io/drugdevelopR/articles/Introduction-to-drugdevelopR.html"><em>Introduction
+to drugdevelopR:</em></a> See how the package works in a basic
+example.</li>
+<li><em>Different outcomes:</em> Apply it to <a href="https://sterniii3.github.io/drugdevelopR/articles/Binary_outcomes.html">binary
+endpoints</a> and <a href="https://sterniii3.github.io/drugdevelopR/articles/Time-to-event_outcomes.html">time-to-event
+endpoints</a>.</li>
+<li><a href="https://sterniii3.github.io/drugdevelopR/articles/Interpreting_Output.html"><em>Interpreting
+the rest of the output:</em></a> Obtain further details on your drug
+development program.</li>
+<li><a href="https://sterniii3.github.io/drugdevelopR/articles/Fixed_and_prior_distributions.html"><em>Fixed
+or prior:</em></a> Model the assumed treatment effect on a prior
+distribution.</li>
+<li><a href="https://sterniii3.github.io/drugdevelopR/articles/More_Parameters.html"><em>More
+parameters:</em></a> Define custom effect size categories. Put
+constraints on the optimization by defining maximum costs, the total
+expected sample size of the program or the minimum expected probability
+of a successful program. Define an expected difference in treatment
+effect between phase II and III. Skip phase II.</li>
+<li><em>Complex drug development programs:</em> Adapt to situations with
+<a href="https://sterniii3.github.io/drugdevelopR/articles/Bias_adjustment.html">biased
+effect estimators</a>, <a href="https://sterniii3.github.io/drugdevelopR/articles/Multitrial.html">multiple
+phase III trials</a>, or <a href="https://sterniii3.github.io/drugdevelopR/articles/Multiple_Endpoints.html">multiple
+endpoints</a>.</li>
+<li><a href="https://sterniii3.github.io/drugdevelopR/articles/More_Parameters.html#parallel-computing"><em>Parallel
+computing:</em></a> Be faster at calculating the optimum by using
+parallel computing.</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

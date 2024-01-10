@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Johannes Cepicka" />
+
+
+<title>Fixed effect estimates and prior distributions</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Fixed effect estimates and prior
+distributions</h1>
+<h4 class="author">Johannes Cepicka</h4>
+
+
+
+<p>Suppose we are planning a drug development program testing the
+superiority of an experimental treatment over a control treatment. Our
+drug development program consists of an exploratory phase II trial which
+is, in case of promising results, followed by a confirmatory phase III
+trial.</p>
+<p>The drugdevelopR package enables us to optimally plan such programs
+using a utility-maximizing approach. Up until now, we presented a very
+basic example on how the package works in <a href="https://sterniii3.github.io/drugdevelopR/articles/Introduction-to-drugdevelopR.html">Introduction
+to planning phase II and phase III trials with drugdevelopR</a>. In this
+article, we want to expand the basic setting and want to introduce you
+to the modelling of the assumed treatment effect on a prior
+distribution.</p>
+<div id="the-example-setting" class="section level1">
+<h1>The example setting</h1>
+<p>We are in the same setting as in the introduction, i.e. we suppose we
+are developing a new tumor treatment, <em>exper</em>. The patient
+variable that we want to investigate is the difference in tumor width
+between the one-year visit and baseline. This is a normally distributed
+outcome variable.</p>
+<p>The parameters we insert into the function
+<code>optimum_normal</code> are the same parameters we also inserted in
+the basic setting. However this time, we set <code>fixed</code> =
+<code>&quot;FALSE&quot;</code>, hence the assumed true treatment effect is not
+fixed but follows a prior distribution. Again, we start by loading the
+drugdevelopR package.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(drugdevelopR)</span></code></pre></div>
+<div id="parameters-of-the-prior-distribution" class="section level2">
+<h2>Parameters of the prior distribution</h2>
+<p>Additionally to the parameters in the baseline scenario with fixed
+treatment effects, we now need further input parameters:</p>
+<ul>
+<li>Differing from the baseline scenario we now have not only one
+treatment effect, but two: <code>Delta1</code> and <code>Delta2</code>.
+The input parameter <code>Delta1</code> is the one we got from some
+randomized controlled pilot trial that our team conducted earlier. Its
+value is given as the standardized difference in means (<span class="math inline">\(\Delta=\frac{\mu_{contro} -
+\mu_{exper}}{\sigma}\)</span>) and its value was determined to be 0.625.
+However, we are not so sure about this result, as another research group
+conducted a similar study and got an treatment effect of 0.9, which will
+now be our value for <code>Delta2</code>. Of course, the choice of <span class="math inline">\(\Delta_1\)</span> and <span class="math inline">\(\Delta_2\)</span> need not be built on two
+clinical studies, but can also be derived from different sources for
+forming a prior belief, e.g. clinical experience.</li>
+<li>We now have to specify how sure we are about the two prior beliefs
+<span class="math inline">\(\Delta_1\)</span> and <span class="math inline">\(\Delta_2\)</span>. This is done by the two
+additional parameters <code>in1</code> and <code>in2</code>. We call
+these parameters the “amount of information”. They refer to the sample
+sizes of the studies on which we base our prior beliefs. If our pilot
+study was conducted with 300 participants, the value for
+<code>in1</code> is set to be 300. Let’s assume that the study of the
+other research group was conducted with 600 participants, so the
+parameter value for <code>in2</code> is 600. The higher amount of
+information, the lower the variance we attribute to that prior
+belief.</li>
+<li>Now, a weight parameter <code>w</code> has to be defined, that
+allows us to weigh the two treatment effects. If we want to trust our
+results more, than we can set a higher parameter value for
+<code>w</code>. (Note that <code>w</code> has to be between 0 and 1, a
+parameter value of 1 would put all the weight on our results and none on
+the results of the second study). If we think the results of the other
+group are more reliable we reduce the value for w, thus putting more
+weight on <code>Delta2</code>. Note that by exchanging the values of
+<code>Delta1</code> and <code>Delta2</code> (and the corresponding
+values for <code>in1</code> and <code>in2</code>) and setting <span class="math inline">\(w_{new} = 1 - w_{old}\)</span> our final results
+will not change. In our case, we want to put more trust on our results
+and thus set the parameter <code>w</code> to be 0.6. Setting the weight
+to <span class="math inline">\(1\)</span> would effectively mean
+ignoring the second treatment effect, which is also possible.</li>
+<li>The prior distribution used in the package is the sum of two
+truncated normal distributions. Hence, we need truncation values
+<code>a</code> as the lower boundary for the truncation and
+<code>b</code> as the upper boundary. In our case we set
+<code>a = 0.25</code> and <code>b = 0.75</code>.</li>
+</ul>
+<p>The prior distribution for the standardized true difference in means
+is then given by <span class="math inline">\(\Delta ∼ w ·
+\mathcal{N}^t_{[0.25,0.75]} (0.625, 4/300) + (1 − w) ·
+\mathcal{N}^t_{[0.25,0.75]} (0.9, 4/600)\)</span> where <span class="math inline">\(N^t_{[a,b]} (\mu, \sigma^2)\)</span> denotes the
+truncated normal distribution with mean <span class="math inline">\(\mu\)</span>, variance <span class="math inline">\(\sigma^2\)</span>, truncated below at a and above
+at b. To see how different input values change the prior distribution we
+refer to the <a href="https://web.imbi.uni-heidelberg.de/prior/">Shiny
+app</a>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a> res <span class="ot">&lt;-</span> <span class="fu">optimal_normal</span>(<span class="at">Delta1 =</span> <span class="fl">0.625</span>, <span class="at">Delta2 =</span> <span class="fl">0.8</span>, <span class="at">fixed =</span> <span class="cn">FALSE</span>, <span class="co"># treatment effect</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>                       <span class="at">n2min =</span> <span class="dv">20</span>, <span class="at">n2max =</span> <span class="dv">400</span>, <span class="co"># sample size region</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>                       <span class="at">stepn2 =</span> <span class="dv">4</span>, <span class="co"># sample size step size</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>                       <span class="at">kappamin =</span> <span class="fl">0.02</span>, <span class="at">kappamax =</span> <span class="fl">0.2</span>, <span class="co"># threshold region</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>                       <span class="at">stepkappa =</span> <span class="fl">0.02</span>, <span class="co"># threshold step size</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>                       <span class="at">c2 =</span> <span class="fl">0.675</span>, <span class="at">c3 =</span> <span class="fl">0.72</span>, <span class="co"># maximal total trial costs</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>                       <span class="at">c02 =</span> <span class="dv">15</span>, <span class="at">c03 =</span> <span class="dv">20</span>, <span class="co"># maximal per-patient costs</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>                       <span class="at">b1 =</span> <span class="dv">3000</span>, <span class="at">b2 =</span> <span class="dv">8000</span>, <span class="at">b3 =</span> <span class="dv">10000</span>, <span class="co"># gains for patients</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>                       <span class="at">alpha =</span> <span class="fl">0.025</span>, <span class="co"># significance level</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>                       <span class="at">beta =</span> <span class="fl">0.1</span>, <span class="co"># 1 - power</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>                       <span class="at">w =</span> <span class="fl">0.6</span>, <span class="at">in1 =</span> <span class="dv">300</span>, <span class="at">in2 =</span> <span class="dv">600</span>, <span class="co">#weight and amount of information</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>                       <span class="at">a =</span> <span class="fl">0.25</span>, <span class="at">b =</span> <span class="fl">0.75</span>) <span class="co">#truncation values</span></span></code></pre></div>
+</div>
+<div id="interpreting-the-output" class="section level2">
+<h2>Interpreting the output</h2>
+<p>After setting all these input parameters and running the function,
+let’s take a look at the output of the program.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>res</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; Optimization result:</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt;  Utility: 3147.32</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt;  Sample size:</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt;    phase II: 80, phase III: 188, total: 268</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt;  Probability to go to phase III: 0.99</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt;  Total cost:</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;    phase II: 69, phase III: 155, cost constraint: Inf</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;  Fixed cost:</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;    phase II: 15, phase III: 20</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;  Variable cost per patient:</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt;    phase II: 0.675, phase III: 0.72</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt;  Effect size categories (expected gains):</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt;   small: 0 (3000), medium: 0.5 (8000), large: 0.8 (10000)</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt;  Success probability: 0.85</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;  Success probability by effect size:</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt;    small: 0.68, medium: 0.16, large: 0.01</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt;  Significance level: 0.025</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt;  Targeted power: 0.9</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt;  Decision rule threshold: 0.06 [Kappa] </span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt;  Parameters of the prior distribution: </span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt;    Delta1: 0.625, Delta2: 0.9, in1: 300, in2: 600,</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt;    a: 0.25, b: 0.75, w: 0.6</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt;  Treatment effect offset between phase II and III: 0 [gamma]</span></span></code></pre></div>
+<p>The program returns a total of thirteen values and the input values.
+Once again, we will only focus at the most important ones:</p>
+<ul>
+<li><code>res$n2</code> is the optimal sample size for phase II and
+<code>res$n3</code> the resulting sample size for phase III. We see that
+the optimal scenario requires 80 participants in phase II and 188
+participants in phase III. The number of participants in both phases was
+reduced compared to the setting with a fixed treatment effect.</li>
+<li><code>res$Kappa</code> is the optimal threshold value for the
+go/no-go decision rule. We see that we need a treatment effect of more
+than 0.06 in phase II in order to proceed to phase III, which is the
+same as in the baseline scenario.</li>
+<li><code>res$u</code> is the expected utility of the program for the
+optimal sample size and threshold value. In our case it amounts to
+3147.32, i.e. we have an expected utility of 314 732 000$. This is a
+6.83% increase over the scenario without the prior distribution. The
+increase in the expected utility can be attributed to the additional
+weight which was put on the second treatment effect <code>Delta2</code>,
+which was more promising than our treatment effect.</li>
+</ul>
+<p>Of course, the differences in the output values compared to the fixed
+setting heavily depend on the choice of the prior.</p>
+</div>
+</div>
+<div id="prior-distributions-for-time-to-event-outcomes" class="section level1">
+<h1>Prior distributions for time-to-event outcomes</h1>
+<p>Note that in the setting of <a href="https://sterniii3.github.io/drugdevelopR/articles/Time-to-event_outcomes.html">time-to-event
+outcomes</a>, the following input parameters have to be specified, which
+differ from the setting with normally distributed outcomes:</p>
+<ul>
+<li>Instead of the parameters <code>in1</code> and <code>in2</code> for
+the “amount of information”, we have to use the parameters
+<code>id1</code> and <code>id2</code> which represent the “number of
+events”. They refer to the number of events which were observed in the
+study to determine the treatment effect. If in our study 210 events
+could be observed, then the value for <code>id1</code> is set to be 210.
+If we assume assume that in the study of the other research group 420
+events could be observed, the parameter value for <code>id2</code> is
+420.</li>
+<li>Moreover, we do not need truncation values, i.e. values for the
+parameters <code>a</code> and <code>b</code>.</li>
+</ul>
+</div>
+<div id="where-to-go-from-here" class="section level1">
+<h1>Where to go from here</h1>
+<p>This tutorial explains how to use the parameters needed for the prior
+distribution when setting the parameter <code>fixed</code> to be
+<code>&quot;FALSE&quot;</code>.</p>
+<p>For more information on how to use the package, see:</p>
+<ul>
+<li><a href="https://sterniii3.github.io/drugdevelopR/articles/Introduction-to-drugdevelopR.html"><em>Introduction
+to drugdevelopR:</em></a> See how the package works in a basic
+example.</li>
+<li><em>Different outcomes:</em> Apply it to <a href="https://sterniii3.github.io/drugdevelopR/articles/Binary_outcomes.html">binary
+endpoints</a> and <a href="https://sterniii3.github.io/drugdevelopR/articles/Time-to-event_outcomes.html">time-to-event
+endpoints</a>.</li>
+<li><a href="https://sterniii3.github.io/drugdevelopR/articles/Interpreting_Output.html"><em>Interpreting
+the rest of the output:</em></a> Obtain further details on your drug
+development program.</li>
+<li><a href="https://sterniii3.github.io/drugdevelopR/articles/More_Parameters.html"><em>More
+parameters:</em></a> Define custom effect size categories. Put
+constraints on the optimization by defining maximum costs, the total
+expected sample size of the program or the minimum expected probability
+of a successful program. Define an expected difference in treatment
+effect between phase II and III. Skip phase II.</li>
+<li><em>Complex drug development programs:</em> Adapt to situations with
+<a href="https://sterniii3.github.io/drugdevelopR/articles/Bias_adjustment.html">biased
+effect estimators</a>, <a href="https://sterniii3.github.io/drugdevelopR/articles/Multitrial.html">multiple
+phase III trials</a>, <a href="https://sterniii3.github.io/drugdevelopR/articles/Multiarm_Trials.html">multi-arm
+trials</a>, or <a href="https://sterniii3.github.io/drugdevelopR/articles/Multiple_Endpoints.html">multiple
+endpoints</a>.</li>
+<li><a href="https://sterniii3.github.io/drugdevelopR/articles/More_Parameters.html#parallel-computing"><em>Parallel
+computing:</em></a> Be faster at calculating the optimum by using
+parallel computing.</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

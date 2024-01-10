@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Johannes Cepicka" />
+
+
+<title>Binary outcome variables</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Binary outcome variables</h1>
+<h4 class="author">Johannes Cepicka</h4>
+
+
+
+<p>Suppose we are planning a drug development program testing the
+superiority of an experimental treatment over a control treatment. Our
+drug development program consists of an exploratory phase II trial which
+is, in case of promising results, followed by a confirmatory phase III
+trial.</p>
+<p>The drugdevelopR package enables us to optimally plan such programs
+using a utility-maximizing approach. To get a brief introduction, we
+presented a very basic example on how the package works in <a href="https://sterniii3.github.io/drugdevelopR/articles/Introduction-to-drugdevelopR.html">Introduction
+to planning phase II and phase III trials with drugdevelopR</a>. In the
+introduction, the observed outcome variable “tumor growth” was normally
+distributed. However, the drugdevelopR package is not only restricted to
+normally distributed outcome variables but also binary distributed
+outcome variables and a time-to-event outcome variables. In this article
+we want explain how the setting with binary distributed variables
+works.</p>
+<div id="the-example-setting" class="section level1">
+<h1>The example setting</h1>
+<p>Suppose we are developing a new treatment to prevent strokes,
+<em>exper</em>. The patient variable that we want to investigate is if
+the patient experienced a stroke (unfavorable outcome with value 1) or
+not (favourable outcome with value 0) over a pre-defined observation
+period. This is a binary outcome variable.</p>
+<p>Within our drug development program, we will compare our experimental
+treatment <em>exper</em> to the control treatment <em>contro</em>. The
+treatment effect measure is given by <span class="math inline">\(\rho =
+−\log(RR)\)</span>, which is the negative logarithm of the risk ratio
+(relative risk) <span class="math inline">\(RR =
+\frac{p_1}{p_0}\)</span>. Here, <span class="math inline">\(p_1\)</span>
+is the failure probability of the experimental treatment (i.e. <span class="math inline">\(\mathbb{P}(X_i = 1|\text{experimental})\)</span>,
+the probability that patient <span class="math inline">\(i\)</span> has
+a stroke) and analogously <span class="math inline">\(p_0\)</span> is
+the failure probability of the control treatment.</p>
+</div>
+<div id="applying-the-package-to-the-example" class="section level1">
+<h1>Applying the package to the example</h1>
+<p>After installing the package according to the <a href="https://sterniii3.github.io/drugdevelopR/#Installation">installation
+instructions</a>, we can load it using the following code:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(drugdevelopR)</span></code></pre></div>
+<div id="defining-all-necessary-parameters" class="section level2">
+<h2>Defining all necessary parameters</h2>
+<p>In order to apply the package to the setting from our example, we
+need to specify the following parameters:</p>
+<ul>
+<li><code>p11</code> is the assumed true probability that the
+unfavorable outcome occurs for our experimental treatment
+<em>exper</em>. <code>p0</code> is the assumed true probability that the
+unfavorable outcome occurs for our control treatment <em>contro</em>.
+Let’s assume that 30% of patients in the experimental group have a
+stroke and 50% in the control group. Therefore, we set
+<code>p11 = 0.3</code> and <code>p0 = 0.5</code>. For now, we will
+assume that the probabilities are fixed and independent of any prior
+distribution. Thus, we will set <code>fixed = TRUE</code>.</li>
+<li><code>n2min</code> and <code>n2max</code> specify the minimal and
+maximal number of participants for the phase II trial. The package will
+search for the optimal sample size within this region. For now, we want
+the program to search for the optimal sample size in the interval
+between 20 and 400 participants. In addition, we will tell the program
+to search this region in steps of four participants at a time by setting
+<code>stepn2 = 4</code>.</li>
+<li><code>rrgomin</code> and <code>rrgomax</code> specify the minimal
+and maximal threshold value for the go/no-go decision rule in terms of
+the negative logarithm of the risk ratio. The package will search for
+the optimal threshold value within this region. For now, we want the
+program to search in the interval between 0.7 and 0.9 while going in
+steps of <code>steprrgo = 0.01</code>. Note that the lower bound of the
+decision rule represents the smallest size of treatment effect observed
+in phase II allowing to go to phase III, so it can be used to model the
+minimal clinically relevant effect size. Moreover, note that the
+interval specified above corresponds to the set <span class="math inline">\(\{-\log(0.9), ..., -\log(0.7)\}\)</span>.</li>
+<li><code>c02</code> and <code>c03</code> are fixed costs for phase II
+and phase III, respectively. We will set the phase II costs to 100 and
+the phase III costs to 150 (in <span class="math inline">\(10^5\)</span>$), i.e. we have fixed costs of 10
+000 000$ in phase II and 15 000 000$ in phase III. Note that the
+currency of the input values does not matter, so an input value for
+<code>c02</code> of 15 could also be interpreted as fixed costs of 1 500
+000€ if necessary.</li>
+<li><code>c2</code> and <code>c3</code> are the per-patient costs in
+phase II and phase III. We will set them to be 0.75 in phase II and 0.1
+in phase III. Again, these values are given in <span class="math inline">\(10^5\)</span>$, i.e. we have per-patient costs of
+75 000$ in phase II and 100 000$ in phase III.</li>
+<li><code>b1</code>, <code>b2</code> and <code>b3</code> are the
+expected small, medium and large benefit categories for successfully
+launching the treatment on the market for each effect size category in
+<span class="math inline">\(10^5\)</span>$. We will define a small
+benefit of 1000, a medium benefit of 2000, and a large benefit of 3000.
+The effect size categories directly correspond to the treatment effect:
+For example, if the treatment effect is between 1 and 0.95 (in terms of
+the risk ratio) we have a small treatment effect yielding an expected
+benefit of 100 000 000$.</li>
+<li><code>alpha</code> is the specified significance level. We will set
+<code>alpha = 0.025</code>.</li>
+<li>1 - <code>beta</code> is the minimal power that we require for our
+drug development program. We will set <code>beta = 0.1</code>, meaning
+that we require a power of 90%.</li>
+</ul>
+<p>As in the setting with normally distributed outcomes, the treatment
+effect may be fixed (as in this example) or may be distributed with
+respect to a <a href="https://sterniii3.github.io/drugdevelopR/articles/Fixed_and_prior_distributions.html">prior
+distribution</a>. Furthermore, <a href="https://sterniii3.github.io/drugdevelopR/articles/More_Parameters.html">all
+options</a> to adapt the program to your specific needs are also
+available in this setting.</p>
+<p>Now that we have defined all parameters needed for our example, we
+are ready to feed them to the package. We will use the function
+<code>optimal_binary()</code>, which calculates the optimal sample size
+and the optimal threshold value for a binary distributed outcome
+variable.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">optimal_binary</span>(<span class="at">p0 =</span> <span class="fl">0.5</span>, <span class="at">p11 =</span>  <span class="fl">0.3</span>,               <span class="co"># probabilities of the unfavorable outcome</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>   <span class="at">n2min =</span> <span class="dv">20</span>, <span class="at">n2max =</span> <span class="dv">400</span>, <span class="at">stepn2 =</span> <span class="dv">4</span>,                   <span class="co"># define optimization set for n2</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>   <span class="at">rrgomin =</span> <span class="fl">0.7</span>, <span class="at">rrgomax =</span> <span class="fl">0.9</span>, <span class="at">steprrgo =</span> <span class="fl">0.01</span>,         <span class="co"># define optimization set for RRgo</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>   <span class="at">alpha =</span> <span class="fl">0.025</span>, <span class="at">beta =</span> <span class="fl">0.1</span>,                              <span class="co"># drug development planning parameters</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>   <span class="at">c2 =</span> <span class="fl">0.75</span>, <span class="at">c3 =</span> <span class="dv">1</span>, <span class="at">c02 =</span> <span class="dv">100</span>, <span class="at">c03 =</span> <span class="dv">150</span>,               <span class="co"># define fixed and variable costs for phase II and III,</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>   <span class="at">K =</span> <span class="cn">Inf</span>, <span class="at">N =</span> <span class="cn">Inf</span>, <span class="at">S =</span> <span class="sc">-</span><span class="cn">Inf</span>,                            <span class="co"># constraints</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>   <span class="at">steps1 =</span> <span class="dv">1</span>, <span class="at">stepm1 =</span> <span class="fl">0.95</span>,  <span class="at">stepl1 =</span> <span class="fl">0.85</span>,             <span class="co"># treatment effect size categories as proposed by IQWiG (2016)</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>   <span class="at">b1 =</span> <span class="dv">1000</span>, <span class="at">b2 =</span> <span class="dv">2000</span>, <span class="at">b3 =</span> <span class="dv">3000</span>,                       <span class="co"># expected benefit categories</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>   <span class="at">w =</span> <span class="fl">0.3</span>, <span class="at">p12 =</span> <span class="fl">0.5</span>, <span class="at">in1 =</span> <span class="dv">30</span>, <span class="at">in2 =</span> <span class="dv">60</span>,                <span class="co"># prior (https://web.imbi.uni-heidelberg.de/prior/)</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>   <span class="at">gamma =</span> <span class="dv">0</span>,                                             <span class="co"># population structures in phase II and III</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>   <span class="at">fixed =</span> <span class="cn">TRUE</span>,                                          <span class="co"># choose if true treatment effects are fixed or random</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>   <span class="at">skipII =</span> <span class="cn">FALSE</span>,                                        <span class="co"># choose if skipping phase II would be an option</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>   <span class="at">num_cl =</span> <span class="dv">1</span>)</span></code></pre></div>
+</div>
+<div id="interpreting-the-output" class="section level2">
+<h2>Interpreting the output</h2>
+<p>After setting all these input parameters and running the function,
+let’s take a look at the output of the program.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>res</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; Optimization result:</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt;  Utility: 1399.56</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt;  Sample size:</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt;    phase II: 260, phase III: 346, total: 606</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt;  Probability to go to phase III: 0.99</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt;  Total cost:</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;    phase II: 295, phase III: 494, cost constraint: Inf</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;  Fixed cost:</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;    phase II: 100, phase III: 150</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;  Variable cost per patient:</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt;    phase II: 0.75, phase III: 1</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt;  Effect size categories (expected gains):</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt;   small: 1 (1000), medium: 0.95 (2000), large: 0.85 (3000)</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt;  Success probability: 0.83</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;  Success probability by effect size:</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt;    small: 0.06, medium: 0.18, large: 0.59</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt;  Significance level: 0.025</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt;  Targeted power: 0.9</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt;  Decision rule threshold: 0.86 [RRgo] </span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt;  Assumed true effect:</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt;   rate in the control: 0.5, rate in the treatment group: 0.3</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt;  Treatment effect offset between phase II and III: 0 [gamma]</span></span></code></pre></div>
+<p>The program returns a total of thirteen values and the input values.
+For now, we will only look at the most important ones:</p>
+<ul>
+<li><code>res$n2</code> is the optimal sample size for phase II and
+<code>res$n3</code> the resulting sample size for phase III. We see that
+the optimal scenario requires 260 participants in phase II and 346
+participants in phase III.</li>
+<li><code>res$RRgo</code> is the optimal threshold value for the
+go/no-go decision rule. We see that we need a risk ratio of less than
+0.86 in phase II in order to proceed to phase III.</li>
+<li><code>res$u</code> is the expected utility of the program for the
+optimal sample size and threshold value. In our case it amounts to
+1399.56, i.e. we have an expected utility of 139 956 000$.</li>
+</ul>
+</div>
+</div>
+<div id="where-to-go-from-here" class="section level1">
+<h1>Where to go from here</h1>
+<p>In this article we introduced the setting, when the outcome variable
+is binary distributed. For more information on how to use the package,
+see:</p>
+<ul>
+<li><a href="https://sterniii3.github.io/drugdevelopR/articles/Introduction-to-drugdevelopR.html"><em>Introduction
+to drugdevelopR:</em></a> See how the package works in a basic normally
+distributed example.</li>
+<li><em>Different outcomes:</em> Apply it to <a href="https://sterniii3.github.io/drugdevelopR/articles/Time-to-event_outcomes.html">time-to-event
+endpoints</a>.</li>
+<li><a href="https://sterniii3.github.io/drugdevelopR/articles/Interpreting_Output.html"><em>Interpreting
+the rest of the output:</em></a> Obtain further details on your drug
+development program.</li>
+<li><a href="https://sterniii3.github.io/drugdevelopR/articles/Fixed_and_prior_distributions.html"><em>Fixed
+or prior:</em></a> Model the assumed treatment effect on a prior
+distribution.</li>
+<li><a href="https://sterniii3.github.io/drugdevelopR/articles/More_Parameters.html"><em>More
+parameters:</em></a> Define custom effect size categories. Put
+constraints on the optimization by defining maximum costs, the total
+expected sample size of the program or the minimum expected probability
+of a successful program. Define an expected difference in treatment
+effect between phase II and III. Skip phase II.</li>
+<li><em>Complex drug development programs:</em> Adapt to situations with
+<a href="https://sterniii3.github.io/drugdevelopR/articles/Bias_adjustment.html">biased
+effect estimators</a>, <a href="https://sterniii3.github.io/drugdevelopR/articles/Multitrial.html">multiple
+phase III trials</a>, <a href="https://sterniii3.github.io/drugdevelopR/articles/Multiarm_Trials.html">multi-arm
+trials</a>, or <a href="https://sterniii3.github.io/drugdevelopR/articles/Multiple_Endpoints.html">multiple
+endpoints</a>.</li>
+<li><a href="https://sterniii3.github.io/drugdevelopR/articles/More_Parameters.html#parallel-computing"><em>Parallel
+computing:</em></a> Be faster at calculating the optimum by using
+parallel computing.</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
