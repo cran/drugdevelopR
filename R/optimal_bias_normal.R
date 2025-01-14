@@ -80,8 +80,10 @@ optimal_bias_normal <- function(w, Delta1, Delta2, in1, in2, a, b,
   if(adj=="all"){
     STRATEGY = c(1,2,3,4)
   }
+  cl <-  parallel::makeCluster(getOption("cl.cores", num_cl)) #define cluster
   
-  
+  on.exit(parallel::stopCluster(cl), add = TRUE)
+  trace <- NULL
   for (strategy in STRATEGY){
     
     calresults <- NULL
@@ -99,18 +101,6 @@ optimal_bias_normal <- function(w, Delta1, Delta2, in1, in2, a, b,
     pb(paste("Performing optimization for adjustment type", proz), class = "sticky", amount = 0)
     Adj <- NA_real_
     kappa <- NA_real_
-    cl <-  parallel::makeCluster(getOption("cl.cores", num_cl)) #define cluster
-    
-    parallel::clusterExport(cl, c("pmvnorm", "dmvnorm", "dtnorm", "prior_normal","Epgo_normal", "En3_normal_L",
-                                  "EPsProg_normal_L","Epgo_normal_L2", "En3_normal_L2",
-                                  "EPsProg_normal_L2","En3_normal_R", "EPsProg_normal_R", "Epgo_normal_R2", "En3_normal_R2",
-                                  "EPsProg_normal_R2", "alpha", "beta",
-                                  "steps1", "steps2", "stepm1", "stepm2", "stepl1", "stepl2",
-                                  "K", "N", "S", "fixed",
-                                  "c2", "c3", "c02", "c03",
-                                  "b1", "b2", "b3", "w", "kappa", "Adj",
-                                  "Delta1", "Delta2", "in1", "in2", "a", "b"), envir=environment())
-    
     for(l in 1:length(ADJ)){
       
       Adj <- ADJ[l]
@@ -123,7 +113,15 @@ optimal_bias_normal <- function(w, Delta1, Delta2, in1, in2, a, b,
         kappa <- KAPPA[j]
         
         
-        
+        parallel::clusterExport(cl, c("pmvnorm", "dmvnorm", "dtnorm", "prior_normal","Epgo_normal", "En3_normal_L",
+                                      "EPsProg_normal_L","Epgo_normal_L2", "En3_normal_L2",
+                                      "EPsProg_normal_L2","En3_normal_R", "EPsProg_normal_R", "Epgo_normal_R2", "En3_normal_R2",
+                                      "EPsProg_normal_R2", "alpha", "beta",
+                                      "steps1", "steps2", "stepm1", "stepm2", "stepl1", "stepl2",
+                                      "K", "N", "S", "fixed",
+                                      "c2", "c3", "c02", "c03",
+                                      "b1", "b2", "b3", "w", "kappa", "Adj",
+                                      "Delta1", "Delta2", "in1", "in2", "a", "b"), envir=environment())
         if(strategy == 1){
           strat = "multipl."
           res <- parallel::parSapply(cl, N2, utility_normal_R, kappa, Adj, w, Delta1, Delta2, in1, in2, a, b,
@@ -164,7 +162,11 @@ optimal_bias_normal <- function(w, Delta1, Delta2, in1, in2, a, b,
                            b1, b2, b3,
                            fixed)  
         }
-        
+        trace <- cbind(trace, 
+                       rbind(rep(Adj, length(N2)),
+                             rep(strat, length(N2)),
+                             rep(kappa, length(N2)),
+                             N2, res))
         pb()
         
         
@@ -180,6 +182,7 @@ optimal_bias_normal <- function(w, Delta1, Delta2, in1, in2, a, b,
       
         
       }
+      
       
       ind   <-  which(ufkt  ==  max(ufkt), arr.ind <-  TRUE)
       
@@ -231,17 +234,15 @@ optimal_bias_normal <- function(w, Delta1, Delta2, in1, in2, a, b,
     
     result <- rbind(result, calresults[index,] ) 
   }
-  
-  
-  
+  row.names(trace) <- c("adj", "strat", "kappa", "n2",
+                        "ufkt", "n3fkt", "spfkt", "pgofkt", "K2fkt", "K3fkt",
+                        "sp1fkt", "sp2fkt", "sp3fkt")
   comment(result) <-   c("\noptimization sequence kappa:", KAPPA,
                          "\noptimization sequence n2:", N2,
                          "\nonset date:", as.character(date),
                          "\nfinish date:", as.character(Sys.time()))
   class(result) <- c("drugdevelopResult", class(result))
-  
-  parallel::stopCluster(cl)
-  
+  attr(result, "trace") <- trace
   return(result)
   
 }

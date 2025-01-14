@@ -189,14 +189,10 @@ optimal_multiple_normal <-
       ),
       envir = environment()
     )
-    
+    on.exit(parallel::stopCluster(cl), add = TRUE)
+    trace <- NULL
     for (j in 1:length(KAPPA)) {
       kappa <- KAPPA[j]
-      
-      
-      
-      
-      
       
       res <-
         parallel::parSapply(
@@ -230,7 +226,7 @@ optimal_multiple_normal <-
           b3,
           rsamp
         )
-      
+      trace <- cbind(trace, rbind(rep(kappa, length(N2)), N2, res))
       pb()
       
       
@@ -244,7 +240,9 @@ optimal_multiple_normal <-
       K3fkt[, j]    <-  res[8,]
       
     }
-    
+    row.names(trace) <- c("kappa", "n2",
+                          "ufkt", "n3fkt", "spfkt", "pgofkt", "sp2fkt", "sp3fkt",
+                          "K2fkt", "K3fkt")
     ind   <-  which(ufkt  ==  max(ufkt), arr.ind <-  TRUE)
     
     I <-  as.vector(ind[1, 1])
@@ -356,8 +354,7 @@ optimal_multiple_normal <-
       as.character(Sys.time())
     )
     class(result) <- c("drugdevelopResult", class(result))
-    
-    parallel::stopCluster(cl)
+    attr(result, "trace") <- trace
     
     return(result)
     

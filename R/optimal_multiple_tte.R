@@ -188,7 +188,8 @@ optimal_multiple_tte <- function(hr1,
     ),
     envir = environment()
   )
-  
+  on.exit(parallel::stopCluster(cl), add = TRUE)
+  trace <- NULL
   for (j in 1:length(HRGO)) {
     HRgo <- HRGO[j]
     
@@ -225,7 +226,7 @@ optimal_multiple_tte <- function(hr1,
         b32,
         rsamp
       )
-    
+    trace <- cbind(trace, rbind(rep(HRgo, length(N2)), N2, res))
     pb()
     
     ufkt[, j]     <-  res[1,]
@@ -238,7 +239,12 @@ optimal_multiple_tte <- function(hr1,
     K3fkt[, j]    <-  res[8,]
     OSfkt[, j]    <-  res[9,]
   }
-  
+  row.names(trace) <- c("hrgo", "n2",
+                        "ufkt", "n3fkt", "spfkt", 
+                        "pgofkt",
+                        "sp2fkt", "sp3fkt",
+                        "K2fkt", "K3fkt",
+                        "OSfkt")  
   ind   <-  which(ufkt  ==  max(ufkt), arr.ind <-  TRUE)
   
   I <-  as.vector(ind[1, 1])
@@ -350,7 +356,8 @@ optimal_multiple_tte <- function(hr1,
     "\nfinish date:",
     as.character(Sys.time())
   )
-  parallel::stopCluster(cl)
+  attr(result, "trace") <- trace
+  
   return(drugdevelopResult(result))
   
 }

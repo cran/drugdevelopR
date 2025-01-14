@@ -6,8 +6,8 @@ knitr::opts_chunk$set(
 )
 
 ## -----------------------------------------------------------------------------
-#  devtools::install_github("LukasDSauer/valtools")
+# devtools::install_github("LukasDSauer/valtools")
 
 ## -----------------------------------------------------------------------------
-#  devtools::install()
+# devtools::install()
 

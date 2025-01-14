@@ -74,7 +74,7 @@
 #'   num_cl = 1)                                        # number of coresfor parallelized computing 
 #'   }
 #' @references
-#' IQWiG (2016). Allgemeine Methoden. Version 5.0, 10.07.2016, Technical Report. Available at \href{https://www.iqwig.de/ueber-uns/methoden/methodenpapier/}{https://www.iqwig.de/ueber-uns/methoden/methodenpapier/}, assessed last 15.05.19.
+#' IQWiG (2016). Allgemeine Methoden. Version 5.0, 10.07.2016, Technical Report. Available at \href{https://www.iqwig.de/ueber-uns/methoden/methodenpapier/}{https://www.iqwig.de/ueber-uns/methoden/methodenpapier/}, last access 15.05.19.
 #'
 #' Preussler, S., Kirchner, M., Goette, H., Kieser, M. (2020). Optimal designs for phase II/III drug development programs including methods for discounting of phase II results. Submitted to peer-review journal.
 #'
@@ -116,8 +116,9 @@ optimal_bias <- function(w, hr1, hr2, id1, id2,
   if(adj=="all"){
     STRATEGY = c(1,2,3,4)
   }
-  
-
+  cl <-  parallel::makeCluster(getOption("cl.cores", num_cl)) #define cluster
+  on.exit(parallel::stopCluster(cl), add = TRUE)
+  trace <- NULL
   for (strategy in STRATEGY){
     
     calresults <- NULL
@@ -136,18 +137,6 @@ optimal_bias <- function(w, hr1, hr2, id1, id2,
     
     HRgo <- NA_real_
     Adj <- NA_real_
-    cl <-  parallel::makeCluster(getOption("cl.cores", num_cl)) #define cluster
-    
-    parallel::clusterExport(cl, c("pmvnorm", "dmvnorm", "prior_tte","Epgo_tte", "Ed3_L",
-                                  "EPsProg_L","Epgo_L2", "Ed3_L2",
-                                  "EPsProg_L2","Ed3_R", "EPsProg_R", "Epgo_R2", "Ed3_R2",
-                                  "EPsProg_R2", "alpha", "beta",
-                                  "steps1", "steps2", "stepm1", "stepm2", "stepl1", "stepl2",
-                                  "K", "N", "S", "fixed",
-                                  "xi2", "xi3", "c2", "c3", "c02", "c03",
-                                  "b1", "b2", "b3", "w", "HRgo", "Adj",
-                                  "hr1", "hr2", "id1", "id2"), envir = environment())
-    
     for(a in 1:length(ADJ)){
       
       Adj <- ADJ[a]
@@ -160,7 +149,15 @@ optimal_bias <- function(w, hr1, hr2, id1, id2,
         HRgo <- HRGO[j]
         
         
-        
+        parallel::clusterExport(cl, c("pmvnorm", "dmvnorm", "prior_tte","Epgo_tte", "Ed3_L",
+                                      "EPsProg_L","Epgo_L2", "Ed3_L2",
+                                      "EPsProg_L2","Ed3_R", "EPsProg_R", "Epgo_R2", "Ed3_R2",
+                                      "EPsProg_R2", "alpha", "beta",
+                                      "steps1", "steps2", "stepm1", "stepm2", "stepl1", "stepl2",
+                                      "K", "N", "S", "fixed",
+                                      "xi2", "xi3", "c2", "c3", "c02", "c03",
+                                      "b1", "b2", "b3", "w", "HRgo", "Adj",
+                                      "hr1", "hr2", "id1", "id2"), envir = environment())
         if(strategy == 1){
           strat = "multipl."
           res <- parallel::parSapply(cl, D2, utility_R, HRgo, Adj, w, hr1, hr2, id1, id2,
@@ -201,7 +198,11 @@ optimal_bias <- function(w, hr1, hr2, id1, id2,
                            b1, b2, b3,
                            fixed)  
         }
-
+        trace <- cbind(trace, 
+                       rbind(rep(Adj, length(D2)),
+                             rep(strat, length(D2)),
+                             rep(HRgo, length(D2)),
+                             D2, res))
         pb()
         
         
@@ -270,16 +271,15 @@ optimal_bias <- function(w, hr1, hr2, id1, id2,
     
     result <- rbind(result, calresults[index,] ) 
   }
-  
-
-
+  row.names(trace) <- c("adj", "strat", "hrgo", "d2",
+                        "ufkt", "d3fkt", "spfkt", "pgofkt", "K2fkt", "K3fkt",
+                        "sp1fkt", "sp2fkt", "sp3fkt", "n2fkt", "n3fkt")
   comment(result) <-   c("\noptimization sequence HRgo:", HRGO,
                     "\noptimization sequence d2:", D2,
                     "\nonset date:", as.character(date),
                     "\nfinish date:", as.character(Sys.time()))
   class(result) <- c("drugdevelopResult", class(result))
-  
-  parallel::stopCluster(cl)
+  attr(result, "trace") <- trace
   return(result)
   
 } 
